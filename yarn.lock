@@ -3473,7 +3473,7 @@ __metadata:
 "leaflet@git+https://github.com/JLyne/Leaflet.git#af5b848e260c740de541acb6460611fedb78d1d7":
   version: 1.9.4
   resolution: "leaflet@https://github.com/JLyne/Leaflet.git#commit=af5b848e260c740de541acb6460611fedb78d1d7"
-  checksum: da650fb4383b4f5592641e642e00144b5b5ff39154d05d830d66e0b0ddea04e6180eb5711a531c3234a25a73d273293cff1bf7d98cdfbe4c9aeae8e7d84e55d2
+  checksum: e863a4a37d2ab7420de945cade93dcf64a487c394dbbabb24dc47f2a5e89c6e0fe8fd24f13fb6fb2a3b417aeb200d8868dc96557afc8ce8505105d957fc2e456
   languageName: node
   linkType: hard
 

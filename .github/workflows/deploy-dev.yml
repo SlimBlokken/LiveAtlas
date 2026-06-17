@@ -1,11 +1,12 @@
-name: Deploy to Dev VPS
+name: Build and Deploy to Dev VPS
 
 on:
   push:
-    branches: [main]
+    branches: [main]      # <-- NOTE: main.yml used "master". Set this to your real default branch.
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,9 +19,22 @@ jobs:
           environment: development
           ref: ${{ github.ref }}
 
+      - run: echo VITE_APP_VERSION=git-${GITHUB_SHA::6} > .env
+      - run: cat .env
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - run: yarn set version stable
+      - run: yarn install
+      - run: yarn build
+      - run: find dist/live-atlas/assets -type f -iname \*.svg -delete
+      - run: cp LICENSE.md dist
+
       - name: Write version file
         run: |
-          echo '{"version":"'"${GITHUB_SHA:0:7}"'","commit_url":"https://github.com/'"${GITHUB_REPOSITORY}"'/commit/'"${GITHUB_SHA}"'"}' > version.json
+          echo '{"version":"'"${GITHUB_SHA:0:7}"'","commit_url":"https://github.com/'"${GITHUB_REPOSITORY}"'/commit/'"${GITHUB_SHA}"'"}' > dist/version.json
         env:
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -30,7 +44,7 @@ jobs:
         uses: burnett01/rsync-deployments@7.0.2
         with:
           switches: -avzr --delete --exclude='.*'
-          path: ./
+          path: dist/
           remote_path: ${{ secrets.DEV_DEPLOY_PATH }}
           remote_host: ${{ secrets.VPS_HOST }}
           remote_user: ${{ secrets.SSH_USER }}

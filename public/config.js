@@ -3,7 +3,12 @@ window.liveAtlasConfig = {
     // This configuration can be used instead to support Pl3xmap and Squaremap installations as well as multiple servers (external webserver required)
     // To configure multiple servers, see https://github.com/JLyne/LiveAtlas/wiki/Configuring-Multiple-Servers.
     servers: {
-        squaremap: {
+        smp: {
+            label: 'SMP',
+            squaremap: '/smp/'   // or window.location.pathname, or true
+        },
+        creative: {
+            label: 'Creative',
             squaremap: '/creative/'   // or window.location.pathname, or true
         },
     },

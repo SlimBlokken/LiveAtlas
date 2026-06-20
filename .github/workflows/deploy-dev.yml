@@ -46,7 +46,7 @@ jobs:
         id: rsync
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avzr --delete --exclude='.*'
+          switches: -avzr --delete --exclude='.*' --filter='P /smp' --filter='P /creative'
           path: dist/
           remote_path: ${{ secrets.DEV_DEPLOY_PATH }}
           remote_host: ${{ secrets.VPS_HOST }}

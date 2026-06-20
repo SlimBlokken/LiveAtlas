@@ -1,0 +1,70 @@
+name: Build and Deploy Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Create GitHub deployment
+        id: deployment
+        uses: chrnorm/deployment-action@v2
+        with:
+          token: ${{ github.token }}
+          environment: production
+          ref: ${{ github.ref }}
+
+      - run: echo VITE_APP_VERSION=git-${GITHUB_SHA::6} > .env
+      - run: cat .env
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - run: yarn install
+        env:
+          NODE_ENV: release
+      - run: yarn build
+      - run: find dist/live-atlas/assets -type f -iname \*.svg -delete
+      - run: cp LICENSE.md dist
+
+      - name: Write version file
+        run: |
+          echo '{"version":"'"${GITHUB_SHA:0:7}"'","commit_url":"https://github.com/'"${GITHUB_REPOSITORY}"'/commit/'"${GITHUB_SHA}"'"}' > dist/version.json
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Deploy via rsync
+        id: rsync
+        uses: burnett01/rsync-deployments@7.0.2
+        with:
+          switches: -avzr --delete --exclude='.*' --filter='P /smp' --filter='P /creative'
+          path: dist/
+          remote_path: ${{ secrets.DEPLOY_PATH }}
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Mark deployment success
+        if: success()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ github.token }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: success
+
+      - name: Mark deployment failure
+        if: failure()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ github.token }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: failure
